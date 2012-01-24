@@ -37,5 +37,6 @@ obj-$(CONFIG_BLK_DEV_HD)	+= hd.o
 
 obj-$(CONFIG_XEN_BLKDEV_FRONTEND)	+= xen-blkfront.o
 obj-$(CONFIG_BLK_DEV_DRBD)     += drbd/
+obj-$(CONFIG_SUN4I_NANDFLASH)	+= sun4i_nand/
 
 swim_mod-objs	:= swim.o swim_asm.o
