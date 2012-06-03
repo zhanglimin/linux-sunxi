@@ -31,17 +31,19 @@
 #include <linux/bootmem.h>
 #include <linux/export.h>
 #include <linux/clkdev.h>
+#include <linux/leds.h>
+#include <linux/delay.h>
 
 #include <asm/system.h>
 #include <asm/irq.h>
-#include <asm/leds.h>
+/* #include <asm/leds.h> */
 #include <asm/hardware/arm_timer.h>
 #include <asm/hardware/icst.h>
 #include <asm/hardware/vic.h>
 #include <asm/mach-types.h>
 #include <asm/setup.h>
 #include <asm/memory.h>
-#include <asm/delay.h>
+/* #include <asm/delay.h> */
 
 #include <asm/mach/arch.h>
 #include <asm/mach/flash.h>
@@ -77,25 +79,25 @@ static u32 DRAMC_get_dram_size(void)
 
 	reg_val = readl(SW_DRAM_SDR_DCR);
 	chip_den = (reg_val >> 3) & 0x7;
-	if(chip_den == 0)
+	if (chip_den == 0)
 		dram_size = 32;
-	else if(chip_den == 1)
+	else if (chip_den == 1)
 		dram_size = 64;
-	else if(chip_den == 2)
+	else if (chip_den == 2)
 		dram_size = 128;
-	else if(chip_den == 3)
+	else if (chip_den == 3)
 		dram_size = 256;
-	else if(chip_den == 4)
+	else if (chip_den == 4)
 		dram_size = 512;
 	else
 		dram_size = 1024;
 
-	if( ((reg_val>>1)&0x3) == 0x1)
-		dram_size<<=1;
-	if( ((reg_val>>6)&0x7) == 0x3)
-		dram_size<<=1;
-	if( ((reg_val>>10)&0x3) == 0x1)
-		dram_size<<=1;
+	if (((reg_val>>1)&0x3) == 0x1)
+		dram_size <<= 1;
+	if (((reg_val>>6)&0x7) == 0x3)
+		dram_size <<= 1;
+	if (((reg_val>>10)&0x3) == 0x1)
+		dram_size <<= 1;
 
 	return dram_size;
 }
@@ -125,18 +127,18 @@ static void __init sw_core_fixup(struct tag *tags, char **cmdline,
 }
 
 unsigned long fb_start = (PLAT_PHYS_OFFSET + SZ_512M - SZ_64M - SZ_32M);
-unsigned long fb_size = SZ_32M;
 EXPORT_SYMBOL(fb_start);
+unsigned long fb_size = SZ_32M;
 EXPORT_SYMBOL(fb_size);
 
 unsigned long g2d_start = (PLAT_PHYS_OFFSET + SZ_512M - SZ_128M);
-unsigned long g2d_size = SZ_1M * 16;
 EXPORT_SYMBOL(g2d_start);
+unsigned long g2d_size = SZ_1M * 16;
 EXPORT_SYMBOL(g2d_size);
 
 unsigned long ve_start = (PLAT_PHYS_OFFSET + SZ_64M);
-unsigned long ve_size = (SZ_64M + SZ_16M);
 EXPORT_SYMBOL(ve_start);
+unsigned long ve_size = (SZ_64M + SZ_16M);
 EXPORT_SYMBOL(ve_size);
 
 static void __init sw_core_reserve(void)
@@ -147,25 +149,24 @@ static void __init sw_core_reserve(void)
 	memblock_reserve(ve_start + SZ_64M, SZ_16M);
 
 #if 0
-        int g2d_used = 0;
-        char *script_base = (char *)(PAGE_OFFSET + 0x3000000);
+	int g2d_used = 0;
+	char *script_base = (char *)(PAGE_OFFSET + 0x3000000);
 
-        g2d_used = sw_cfg_get_int(script_base, "g2d_para", "g2d_used");
+	g2d_used = sw_cfg_get_int(script_base, "g2d_para", "g2d_used");
 
 	memblock_reserve(fb_start, fb_size);
 	memblock_reserve(SYS_CONFIG_MEMBASE, SYS_CONFIG_MEMSIZE);
 	memblock_reserve(ve_start, ve_start);
 
-        if (g2d_used) {
-                g2d_size = sw_cfg_get_int(script_base, "g2d_para", "g2d_size");
-                if (g2d_size < 0 || g2d_size > SW_G2D_MEM_MAX) {
-                        g2d_size = SW_G2D_MEM_MAX;
-                }
-                g2d_start = SW_G2D_MEM_BASE;
-                g2d_size = g2d_size;
-                memblock_reserve(g2d_start, g2d_size);
-        }
+	if (g2d_used) {
+		g2d_size = sw_cfg_get_int(script_base, "g2d_para", "g2d_size");
+		if (g2d_size < 0 || g2d_size > SW_G2D_MEM_MAX)
+			g2d_size = SW_G2D_MEM_MAX;
 
+		g2d_start = SW_G2D_MEM_BASE;
+		g2d_size = g2d_size;
+		memblock_reserve(g2d_start, g2d_size);
+	}
 #endif
 	pr_info("Memory Reserved(in bytes):\n");
 	pr_info("\tLCD: 0x%08x, 0x%08x\n", (unsigned int)fb_start, (unsigned int)fb_size);
@@ -178,16 +179,16 @@ void sw_irq_ack(struct irq_data *irqd)
 {
 	unsigned int irq = irqd->irq;
 
-	if (irq < 32){
+	if (irq < 32) {
 		writel(readl(SW_INT_ENABLE_REG0) & ~(1<<irq), SW_INT_ENABLE_REG0);
 		writel(readl(SW_INT_MASK_REG0) | (1 << irq), SW_INT_MASK_REG0);
 		writel(readl(SW_INT_IRQ_PENDING_REG0) | (1<<irq), SW_INT_IRQ_PENDING_REG0);
-	} else if(irq < 64){
+	} else if (irq < 64) {
 		irq -= 32;
 		writel(readl(SW_INT_ENABLE_REG1) & ~(1<<irq), SW_INT_ENABLE_REG1);
 		writel(readl(SW_INT_MASK_REG1) | (1 << irq), SW_INT_MASK_REG1);
 		writel(readl(SW_INT_IRQ_PENDING_REG1) | (1<<irq), SW_INT_IRQ_PENDING_REG1);
-	} else if(irq < 96){
+	} else if (irq < 96) {
 		irq -= 64;
 		writel(readl(SW_INT_ENABLE_REG2) & ~(1<<irq), SW_INT_ENABLE_REG2);
 		writel(readl(SW_INT_MASK_REG2) | (1 << irq), SW_INT_MASK_REG2);
@@ -200,14 +201,14 @@ static void sw_irq_mask(struct irq_data *irqd)
 {
 	unsigned int irq = irqd->irq;
 
-	if(irq < 32){
+	if (irq < 32) {
 		writel(readl(SW_INT_ENABLE_REG0) & ~(1<<irq), SW_INT_ENABLE_REG0);
 		writel(readl(SW_INT_MASK_REG0) | (1 << irq), SW_INT_MASK_REG0);
-	} else if(irq < 64){
+	} else if (irq < 64) {
 		irq -= 32;
 		writel(readl(SW_INT_ENABLE_REG1) & ~(1<<irq), SW_INT_ENABLE_REG1);
 		writel(readl(SW_INT_MASK_REG1) | (1 << irq), SW_INT_MASK_REG1);
-	} else if(irq < 96){
+	} else if (irq < 96) {
 		irq -= 64;
 		writel(readl(SW_INT_ENABLE_REG2) & ~(1<<irq), SW_INT_ENABLE_REG2);
 		writel(readl(SW_INT_MASK_REG2) | (1 << irq), SW_INT_MASK_REG2);
@@ -218,16 +219,16 @@ static void sw_irq_unmask(struct irq_data *irqd)
 {
 	unsigned int irq = irqd->irq;
 
-	if(irq < 32){
+	if (irq < 32) {
 		writel(readl(SW_INT_ENABLE_REG0) | (1<<irq), SW_INT_ENABLE_REG0);
 		writel(readl(SW_INT_MASK_REG0) & ~(1 << irq), SW_INT_MASK_REG0);
-		if(irq == SW_INT_IRQNO_ENMI) /* must clear pending bit when enabled */
+		if (irq == SW_INT_IRQNO_ENMI) /* must clear pending bit when enabled */
 			writel((1 << SW_INT_IRQNO_ENMI), SW_INT_IRQ_PENDING_REG0);
-	} else if(irq < 64){
+	} else if (irq < 64) {
 		irq -= 32;
 		writel(readl(SW_INT_ENABLE_REG1) | (1<<irq), SW_INT_ENABLE_REG1);
 		writel(readl(SW_INT_MASK_REG1) & ~(1 << irq), SW_INT_MASK_REG1);
-	} else if(irq < 96){
+	} else if (irq < 96) {
 		irq -= 64;
 		writel(readl(SW_INT_ENABLE_REG2) | (1<<irq), SW_INT_ENABLE_REG2);
 		writel(readl(SW_INT_MASK_REG2) & ~(1 << irq), SW_INT_MASK_REG2);
@@ -286,7 +287,7 @@ static void sun4i_restart(char mode, const char *cmd)
 	*(volatile unsigned int *)WATCH_DOG_CTRL_REG = 0;
 	__delay(100000);
 	*(volatile unsigned int *)WATCH_DOG_CTRL_REG = 3;
-	while(1);
+	while (1);
 }
 
 static void timer_set_mode(enum clock_event_mode mode, struct clock_event_device *clk)
@@ -350,8 +351,8 @@ static irqreturn_t sw_timer_interrupt(int irq, void *dev_id)
 	writel(0x1, SW_TIMER_INT_STA_REG);
 
 	/*
- 	 * timer_set_next_event will be called only in ONESHOT mode
- 	 */
+	 * timer_set_next_event will be called only in ONESHOT mode
+	 */
 	evt->event_handler(evt);
 
 	return IRQ_HANDLED;
@@ -384,9 +385,8 @@ static void __init sw_timer_init(void)
 	writel(val, SW_TIMER0_CTL_REG);
 
 	ret = setup_irq(SW_INT_IRQNO_TIMER0, &sw_timer_irq);
-	if (ret) {
+	if (ret)
 		pr_warning("failed to setup irq %d\n", SW_INT_IRQNO_TIMER0);
-	}
 
 	/* Enable time0 interrupt */
 	val = readl(SW_TIMER_INT_CTL_REG);
@@ -416,12 +416,10 @@ enum sw_ic_ver sw_get_ic_ver(void)
 
 	val = (val >> 6) & 0x3;
 
-	if (val == 0x00) {
+	if (val == 0x00)
 		return MAGIC_VER_A;
-	}
-	else if(val == 0x03) {
-	    return MAGIC_VER_B;
-	}
+	else if (val == 0x03)
+		return MAGIC_VER_B;
 
 	return MAGIC_VER_C;
 }
@@ -430,16 +428,13 @@ EXPORT_SYMBOL(sw_get_ic_ver);
  * Arch Required Implementations
  *
  */
-//void arch_idle(void)
-//{
+/* void arch_idle(void)
+{
+}
 
-//}
-
-//void arch_reset(char mode, const char *cmd)
-//{
-
-
-//}
+void arch_reset(char mode, const char *cmd)
+{
+} */
 
 
 MACHINE_START(SUN4I, "sun4i")
