@@ -58,15 +58,13 @@ static struct platform_device sw_pdev_dmac = {
 	.name = "sw_dmac",
 };
 
-static struct resource sw_res_nand =
-{
+static struct resource sw_res_nand = {
 	.start = SW_PA_NANDFLASHC_IO_BASE,
 	.end = SW_PA_NANDFLASHC_IO_BASE + 0x1000,
 	.flags = IORESOURCE_MEM,
 };
 
-struct platform_device sw_pdev_nand =
-{
+struct platform_device sw_pdev_nand = {
 	.name = "sw_nand",
 	.id = -1,
 	.num_resources = 1,
@@ -108,7 +106,7 @@ struct platform_device sun4i_twi0_device = {
 static struct sun4i_i2c_platform_data sun4i_twi1_pdata[] = {
 	{
 		.bus_num   = 1,
-    	.frequency = I2C1_TRANSFER_SPEED,
+		.frequency = I2C1_TRANSFER_SPEED,
 	},
 };
 
@@ -138,7 +136,7 @@ struct platform_device sun4i_twi1_device = {
 static struct sun4i_i2c_platform_data sun4i_twi2_pdata[] = {
 	{
 		.bus_num   = 2,
-    	.frequency = I2C2_TRANSFER_SPEED,
+		.frequency = I2C2_TRANSFER_SPEED,
 	},
 };
 
