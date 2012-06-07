@@ -265,7 +265,7 @@ void __init sw_core_init_irq(void)
 	writel(0xffffffff, SW_INT_FIQ_PENDING_REG0);
 	writel(0xffffffff, SW_INT_FIQ_PENDING_REG1);
 	writel(0xffffffff, SW_INT_FIQ_PENDING_REG2);
-	
+
 	/*enable protection mode*/
 	writel(0x01, SW_INT_PROTECTION_REG);
 	/*config the external interrupt source type*/

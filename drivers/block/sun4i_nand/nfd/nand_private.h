@@ -12,7 +12,7 @@ typedef struct
 {
 	__u8    mid;
 	__u32   used;
-	
+
 } __drv_nand_t;
 
 typedef struct

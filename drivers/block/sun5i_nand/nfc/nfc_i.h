@@ -16,7 +16,7 @@
 #define	_NFC_I_H_
 
 #include "../include/type_def.h"
-#include "nfc.h"              
+#include "nfc.h"
 //#include "../nfd/dma_for_nand.h"
 //#include "ebios_i.h"
 //#define MAX_ECC_BIT_CNT	8
