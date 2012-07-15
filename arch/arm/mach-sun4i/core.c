@@ -120,11 +120,11 @@ static void __init sw_core_fixup(struct machine_desc *desc,
 	if (size <= 512) {
 		mi->nr_banks = 1;
 		mi->bank[0].start = 0x40000000;
-		mi->bank[0].size = SZ_1M * (size - CONFIG_SUNXI_MALI_SIZE);
+		mi->bank[0].size = SZ_1M * size;
 	} else {
 		mi->nr_banks = 2;
 		mi->bank[0].start = 0x40000000;
-		mi->bank[0].size = SZ_1M * (512 - CONFIG_SUNXI_MALI_SIZE);
+		mi->bank[0].size = SZ_1M * 512;
 		mi->bank[1].start = 0x60000000;
 		mi->bank[1].size = SZ_1M * (size - 512);
 	}
@@ -132,13 +132,10 @@ static void __init sw_core_fixup(struct machine_desc *desc,
 #else
 	for (; t->hdr.size; t = tag_next(t)) if (t->hdr.tag == ATAG_MEM) {
 		size += t->u.mem.size / SZ_1M;
-		if (banks++ == 0)
-			t->u.mem.size -= CONFIG_SUNXI_MALI_SIZE * SZ_1M;
+		banks++;
 	}
 #endif
 	pr_info("Total Detected Memory: %uMB with %d banks\n", size, banks);
-	if (CONFIG_SUNXI_MALI_SIZE > 0)
-		pr_info("%u MB reserved for MALI\n", CONFIG_SUNXI_MALI_SIZE);
 }
 
 #define pr_reserve_info(L, START, SIZE) \
@@ -150,6 +147,21 @@ static void __init sw_core_fixup(struct machine_desc *desc,
 /* Only reserve certain important memory blocks if there are actually
  * drivers which use them.
  */
+
+#if defined CONFIG_MALI || defined CONFIG_MALI_MODULE
+unsigned long mali_start = (PLAT_PHYS_OFFSET + SZ_512M - SZ_64M);
+unsigned long mali_size = SZ_64M;
+EXPORT_SYMBOL(mali_start);
+EXPORT_SYMBOL(mali_size);
+
+static void __init reserve_mali(void)
+{
+	memblock_reserve(mali_start, mali_size);
+	pr_reserve_info("MALI", mali_start, mali_size);
+}
+#else
+static void __init reserve_mali(void) {}
+#endif
 
 #if defined CONFIG_FB || defined CONFIG_FB_MODULE
 /* The FB block is used by:
@@ -282,6 +294,7 @@ static void __init sw_core_reserve(void)
 	reserve_ve();
 	reserve_g2d();
 	reserve_fb();
+	reserve_mali();
 	reserve_ramconsole();
 }
 
