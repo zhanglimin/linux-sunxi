@@ -120,11 +120,11 @@ static void __init sw_core_fixup(struct machine_desc *desc,
 	if (size <= 512) {
 		mi->nr_banks = 1;
 		mi->bank[0].start = 0x40000000;
-		mi->bank[0].size = SZ_1M * (size - 64);
+		mi->bank[0].size = SZ_1M * (size - CONFIG_SUNXI_MALI_SIZE);
 	} else {
 		mi->nr_banks = 2;
 		mi->bank[0].start = 0x40000000;
-		mi->bank[0].size = SZ_1M * (512 - 64);
+		mi->bank[0].size = SZ_1M * (512 - CONFIG_SUNXI_MALI_SIZE);
 		mi->bank[1].start = 0x60000000;
 		mi->bank[1].size = SZ_1M * (size - 512);
 	}
@@ -133,10 +133,12 @@ static void __init sw_core_fixup(struct machine_desc *desc,
 	for (; t->hdr.size; t = tag_next(t)) if (t->hdr.tag == ATAG_MEM) {
 		size += t->u.mem.size / SZ_1M;
 		if (banks++ == 0)
-			t->u.mem.size -= 64 * SZ_1M;
+			t->u.mem.size -= CONFIG_SUNXI_MALI_SIZE * SZ_1M;
 	}
 #endif
 	pr_info("Total Detected Memory: %uMB with %d banks\n", size, banks);
+	if (CONFIG_SUNXI_MALI_SIZE > 0)
+		pr_info("%u MB reserved for MALI\n", CONFIG_SUNXI_MALI_SIZE);
 }
 
 #define pr_reserve_info(L, START, SIZE) \
