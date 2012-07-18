@@ -13,39 +13,41 @@
 
 /* Configuration for the EB platform with ZBT memory enabled */
 
+#define SUNXI_MALI_BASE	0x01C40000
+
 static _mali_osk_resource_t arch_configuration [] =
 {
 	{
 		.type = PMU,
 		.description = "Mali-400 PMU",
-		.base = 0x01C42000,
+		.base = SUNXI_MALI_BASE + 0x2000,
 		.irq = 73,
 		.mmu_id = 0
 	},
 	{
 		.type = MALI400GP,
 		.description = "Mali-400 GP",
-		.base = 0x01C40000,
+		.base = SUNXI_MALI_BASE,
 		.irq = 69,
 		.mmu_id = 1
 	},
 	{
 		.type = MALI400PP,
-		.base = 0x01C48000,
+		.base = SUNXI_MALI_BASE + 0x8000,
 		.irq = 71,
 		.description = "Mali-400 PP",
 		.mmu_id = 2
 	},
 	{
 		.type = MMU,
-		.base = 0x01C43000,
+		.base = SUNXI_MALI_BASE + 0x3000,
 		.irq = 70,
 		.description = "Mali-400 MMU for GP",
 		.mmu_id = 1
 	},
 	{
 		.type = MMU,
-		.base = 0x01C44000,
+		.base = SUNXI_MALI_BASE + 0x4000,
 		.irq = 72,
 		.description = "Mali-400 MMU for PP",
 		.mmu_id = 2
@@ -74,7 +76,7 @@ static _mali_osk_resource_t arch_configuration [] =
 	},
 	{
 		.type = MALI400L2,
-		.base = 0x01C41000,
+		.base = SUNXI_MALI_BASE + 0x1000,
 		.description = "Mali-400 L2 cache"
 	},
 };
