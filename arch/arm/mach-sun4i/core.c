@@ -137,23 +137,6 @@ static void __init sw_core_fixup(struct machine_desc *desc,
  * drivers which use them.
  */
 
-#if defined CONFIG_MALI || defined CONFIG_MALI_MODULE
-unsigned long mali_start = (PLAT_PHYS_OFFSET + SZ_512M - SZ_64M);
-unsigned long mali_size = SZ_64M;
-EXPORT_SYMBOL(mali_start);
-EXPORT_SYMBOL(mali_size);
-
-static void __init reserve_mali(const char *script_base)
-{
-	if (sw_cfg_get_int(script_base, "mali_para", "mali_used") == 1) {
-		memblock_reserve(mali_start, mali_size);
-		pr_reserve_info("MALI", mali_start, mali_size);
-	} else
-		mali_start = mali_size = 0;
-}
-#else
-static void __init reserve_mali(const char *script_base) {}
-#endif
 
 #if defined CONFIG_FB || defined CONFIG_FB_MODULE
 /* The FB block is used by:
@@ -283,7 +266,6 @@ static void __init sw_core_reserve(void)
 	reserve_ve();
 	reserve_g2d(script);
 	reserve_fb(script);
-	reserve_mali(script);
 	reserve_ramconsole();
 }
 

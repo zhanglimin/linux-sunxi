@@ -38,6 +38,7 @@
 #include <asm/setup.h>
 #include <mach/hardware.h>
 #include <mach/i2c.h>
+#include <mach/sys_config.h>
 #include <mach/ramconsole.h>
 
 /* uart */
@@ -174,11 +175,37 @@ struct platform_device sun4i_twi2_device = {
 	},
 };
 
+/* mali */
+#if defined(CONFIG_MALI) || defined(CONFIG_MALI_MODULE)
+static struct resource sun4i_mali_resources[] = {
+	{
+		.flags = IORESOURCE_MEM,
+		.start = (PLAT_PHYS_OFFSET + SZ_512M - SZ_64M),
+		.end = (PLAT_PHYS_OFFSET + SZ_512M - 1),
+	},
+};
+
+static struct platform_device sun4i_device_mali = {
+	.name	= "mali_dev",
+	.id	= -1,
+	.num_resources	= ARRAY_SIZE(sun4i_mali_resources),
+	.resource	= sun4i_mali_resources,
+};
+
 #if defined(CONFIG_MALI_DRM) || defined(CONFIG_MALI_DRM_MODULE)
 static struct platform_device sun4i_device_mali_drm = {
 	.name = "mali_drm",
 	.id   = -1,
 };
+#endif
+
+static struct platform_device *sw_mali_pdevs[] __initdata = {
+	&sun4i_device_mali,
+#if defined(CONFIG_MALI_DRM) || defined(CONFIG_MALI_DRM_MODULE)
+	&sun4i_device_mali_drm,
+#endif
+};
+
 #endif
 
 /* ram console */
@@ -212,9 +239,6 @@ static struct platform_device *sw_pdevs[] __initdata = {
 	&sun4i_twi0_device,
 	&sun4i_twi1_device,
 	&sun4i_twi2_device,
-#if defined(CONFIG_MALI_DRM) || defined(CONFIG_MALI_DRM_MODULE)
-	&sun4i_device_mali_drm,
-#endif
 #ifdef CONFIG_ANDROID_RAM_CONSOLE
 	&sun4i_ramconsole,
 #endif
@@ -222,5 +246,10 @@ static struct platform_device *sw_pdevs[] __initdata = {
 
 void __init sw_pdev_init(void)
 {
+	const char *script = (char *)(PAGE_OFFSET + 0x3000000);
+
 	platform_add_devices(sw_pdevs, ARRAY_SIZE(sw_pdevs));
+
+	if (sw_cfg_get_int(script, "mali_para", "mali_used") == 1)
+		platform_add_devices(sw_mali_pdevs, ARRAY_SIZE(sw_mali_pdevs));
 }
