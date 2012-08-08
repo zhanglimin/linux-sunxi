@@ -491,6 +491,17 @@ enum sw_ic_ver sw_get_ic_ver(void)
 	return MAGIC_VER_A;
 }
 EXPORT_SYMBOL(sw_get_ic_ver);
+
+int sw_get_chip_id(struct sw_chip_id *chip_id)
+{
+	chip_id->sid_rkey0 = 0;
+	chip_id->sid_rkey1 = 1;
+	chip_id->sid_rkey2 = 2;
+	chip_id->sid_rkey3 = 3;
+	return 1;
+}
+EXPORT_SYMBOL(sw_get_chip_id);
+
 /**
  * Arch Required Implementations
  *
