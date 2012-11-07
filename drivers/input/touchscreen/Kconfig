@@ -756,4 +756,9 @@ config  TOUCHSCREEN_COASIA
        tristate  "COASIA touchscreen driver"
        help
           COASIA touchscreen driver
+
+config  TOUCHSCREEN_GT801_2PLUS1_TS		
+       tristate  "GT801_2PLUS1_TS touchscreen driver"
+       help
+          GT801_2PLUS1_TS touchscreen driver  
 endif
