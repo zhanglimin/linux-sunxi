@@ -34,7 +34,7 @@ __s32 BSP_disp_hdmi_open(__u32 sel)
     	tv_mod = gdisp.screen[sel].hdmi_mode;
 
         hdmi_clk_on();
-    	lcdc_clk_on(sel);
+	lcdc_clk_on(sel, 1);
     	image_clk_on(sel);
 		Image_open(sel);//set image normal channel start bit , because every de_clk_off( )will reset this bit
     	disp_clk_cfg(sel,DISP_OUTPUT_TYPE_HDMI, tv_mod);
@@ -58,7 +58,7 @@ __s32 BSP_disp_hdmi_open(__u32 sel)
             }
         }
 
-    	TCON1_set_hdmi_mode(sel,tv_mod);
+	TCON1_set_hdmi_mode(sel,tv_mod);
     	TCON1_open(sel);
     	if(gdisp.init_para.Hdmi_open)
     	{
@@ -104,7 +104,7 @@ __s32 BSP_disp_hdmi_close(__u32 sel)
     	TCON1_close(sel);
 
     	image_clk_off(sel);
-    	lcdc_clk_off(sel);
+	lcdc_clk_off(sel, 1);
     	hdmi_clk_off();
     	DE_BE_Set_Outitl_enable(sel, FALSE);
         for(scaler_index=0; scaler_index<2; scaler_index++)
@@ -219,6 +219,27 @@ __s32 BSP_disp_set_hdmi_func(__disp_hdmi_func * func)
     gdisp.init_para.hdmi_mode_support = func->hdmi_mode_support;
     gdisp.init_para.hdmi_get_HPD_status = func->hdmi_get_HPD_status;
     gdisp.init_para.hdmi_set_pll = func->hdmi_set_pll;
+    gdisp.init_para.hdmi_suspend = func->hdmi_suspend;
+    gdisp.init_para.hdmi_resume = func->hdmi_resume;
 
     return DIS_SUCCESS;
+}
+__s32 BSP_disp_hdmi_suspend()
+{
+    if(gdisp.init_para.hdmi_suspend)
+    {
+        return gdisp.init_para.hdmi_suspend();
+    }
+
+    return -1;
+}
+
+__s32 BSP_disp_hdmi_resume()
+{
+    if(gdisp.init_para.hdmi_resume)
+    {
+        return gdisp.init_para.hdmi_resume();
+    }
+
+    return -1;
 }

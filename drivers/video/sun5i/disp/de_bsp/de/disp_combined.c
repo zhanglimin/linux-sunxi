@@ -336,4 +336,3 @@ __s32 BSP_disp_layer_get_piro(__u32 sel, __u32 hid)
 }
 
 
-

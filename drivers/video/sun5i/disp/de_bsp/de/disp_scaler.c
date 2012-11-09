@@ -256,7 +256,7 @@ __s32 Scaler_event_proc(void *parg)
     DE_SCAL_ClearINT(sel,fe_intflags);
     DE_BE_ClearINT(sel,be_intflags);
 
-    DE_INF("scaler %d interrupt, scal_int_status:0x%x!\n", sel, fe_intflags);
+    //DE_INF("scaler %d interrupt, scal_int_status:0x%x!\n", sel, fe_intflags);
 
     if(be_intflags & DE_IMG_REG_LOAD_FINISH)
     {
@@ -1067,7 +1067,7 @@ __s32 BSP_disp_scaler_start(__u32 handle,__disp_scaler_para_t *para)
     	DE_SCAL_Set_Writeback_Chnl(sel, i);
         DE_SCAL_Output_Select(sel, 3);
     	DE_SCAL_EnableINT(sel,DE_WB_END_IE);
-    	DE_SCAL_Start(sel);
+	DE_SCAL_Start(sel);
     	DE_SCAL_Set_Reg_Rdy(sel);
 
 #ifndef __LINUX_OSAL__
@@ -1291,4 +1291,57 @@ __s32 Scaler_Set_Enhance(__u32 sel, __u32 bright, __u32 contrast, __u32 saturati
     return DIS_SUCCESS;
 }
 
+__s32 BSP_disp_store_scaler_reg(__u32 sel, __u32 addr)
+{
+    __u32 i = 0;
+    __u32 value = 0;
+    __u32 reg_base = 0;
+
+    if(sel == 0)
+    {
+        reg_base = gdisp.init_para.base_scaler0;
+    }
+    else
+    {
+        reg_base = gdisp.init_para.base_scaler1;
+    }
+
+    for(i=0; i<0xa18; i+=4)
+    {
+        value = sys_get_wvalue(reg_base + i);
+        sys_put_wvalue(addr + i, value);
+    }
+
+    return 0;
+}
+
+__s32 BSP_disp_restore_scaler_reg(__u32 sel, __u32 addr)
+{
+    __u32 i = 0;
+    __u32 value = 0;
+    __u32 reg_base = 0;
+
+    if(sel == 0)
+    {
+        reg_base = gdisp.init_para.base_scaler0;
+    }
+    else
+    {
+        reg_base = gdisp.init_para.base_scaler1;
+    }
+
+    for(i=8; i<0xa18; i+=4)
+    {
+        value = sys_get_wvalue(addr + i);
+        sys_put_wvalue(reg_base + i,value);
+    }
+
+    value = sys_get_wvalue(addr);
+    sys_put_wvalue(reg_base,value);
+
+    value = sys_get_wvalue(addr + 4);
+    sys_put_wvalue(reg_base + 4,value);
+
+    return 0;
+}
 
