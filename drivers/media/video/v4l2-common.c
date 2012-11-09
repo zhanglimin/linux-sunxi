@@ -297,6 +297,8 @@ void v4l2_i2c_subdev_init(struct v4l2_subdev *sd, struct i2c_client *client,
 	snprintf(sd->name, sizeof(sd->name), "%s %d-%04x",
 		client->driver->driver.name, i2c_adapter_id(client->adapter),
 		client->addr);
+	
+	printk("~~~~%s:  regs.value = 0x%x,driver name = %s \n", __func__, client->addr,client->driver->driver.name);
 }
 EXPORT_SYMBOL_GPL(v4l2_i2c_subdev_init);
 

@@ -1,10 +1,10 @@
 ===========================================
 
-Version: V1_11
+Version: V1_31
 
 Author:  raymonxiu
 
-Date:     2012-1-19 19:25:36
+Date:     2012-2-28 19:47:09
 
 Description:
 
@@ -21,6 +21,27 @@ insmod sun4i_csiX.ko ccm="hi253" i2c_addr=0x40
 insmod sun4i_csiX.ko ccm="gc0307" i2c_addr=0x42
 insmod sun4i_csiX.ko ccm="mt9d112" i2c_addr=0x78
 insmod sun4i_csiX.ko ccm="ov5640" i2c_addr=0x78
+insmod sun4i_csiX.ko ccm="gc2015" i2c_addr=0x60
+insmod sun4i_csiX.ko ccm="ov2643" i2c_addr=0x60
+
+V1_31
+CSI: Modify clock gating and axp_gpio_get_io bug
+1) Insure the clk_enable() and clk_disable() are called in pair
+2) Fix the axp_gpio_get_io() bug for pmu gpio2
+
+V1_30
+CSI: Modfiy device source code to keep identical between sun4i/5i
+1) Modfiy the device source code to keep identical between sun4i/5i
+2) Fix gc0308 red color
+
+V1_21
+CSI: Add standy and reset control before power off
+
+V1_20
+CSI: Add i2c adapter lock when camera power on/off and standby on/off
+1) Add i2c adapter lock when camera power on/off and standby on/off
+2) Modify standby and reset io sequence when power on and standby off
+3) Add new camera module gc2015,ov2643 and modify deconfig
 
 V1_11
 CSI: Mainly fix bugs on mt9m112,ov5640 and ov7670
