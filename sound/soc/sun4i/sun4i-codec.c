@@ -342,7 +342,7 @@ static  int codec_init(void)
 	if(codec_chip_ver == MAGIC_VER_A){
 		codec_wr_control(SUN4I_DAC_ACTL, 0x6, VOLUME, 0x01);
 	}else if(codec_chip_ver == MAGIC_VER_B || codec_chip_ver == MAGIC_VER_C){
-		codec_wr_control(SUN4I_DAC_ACTL, 0x6, VOLUME, 0x3b);
+		codec_wr_control(SUN4I_DAC_ACTL, 0x6, VOLUME, 0x37);////0x3b
 	}else{
 		printk("[audio codec] chip version is unknown!\n");
 		return -1;
