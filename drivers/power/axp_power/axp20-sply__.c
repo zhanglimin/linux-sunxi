@@ -62,175 +62,6 @@ int pmu_usbvolnew = 0;
 int pmu_usbcurnew = 0;
 int axp_usbcurflag = 0;
 int axp_usbvolflag = 0;
-int tem_2_res_tabel[167] = {
-340707,
-318488,
-297895,
-278797,
-261072,
-244611,
-229312,
-215084,
-201844,
-189516,
-178029,
-167320,
-157331,
-148006,
-139299,
-131162,
-123555,
-116439,
-109780,
-103544,
-97702,
-92227,
-87092,
-82275,
-77754,
-73508,
-69520,
-65772,
-62247,
-58932,
-55813,
-52876,
-50111,
-47506,
-45050,
-42735,
-40552,
-38492,
-36548,
-34712,
-32979,
-31341,
-29793,
-28330,
-26946,
-25636,
-24398,
-23225,
-22115,
-21063,
-20067,
-19123,
-18228,
-17379,
-16574,
-15811,
-15086,
-14398,
-13745,
-13125,
-12536,
-11976,
-11444,
-10938,
-10457,
-10000,
-9565,
-9151,
-8757,
-8381,
-8024,
-7684,
-7360,
-7051,
-6756,
-6476,
-6208,
-5953,
-5710,
-5477,
-5256,
-5044,
-4842,
-4650,
-4465,
-4290,
-4121,
-3961,
-3807,
-3661,
-3520,
-3386,
-3258,
-3135,
-3017,
-2905,
-2797,
-2694,
-2595,
-2501,
-2410,
-2323,
-2240,
-2160,
-2084,
-2010,
-1940,
-1873,
-1808,
-1746,
-1686,
-1629,
-1574,
-1522,
-1471,
-1422,
-1376,
-1331,
-1287,
-1246,
-1206,
-1168,
-1131,
-1095,
-1061,
-1029,
-997,
-967,
-937,
-909,
-882,
-856,
-831,
-806,
-783,
-761,
-739,
-718,
-698,
-678,
-659,
-641,
-624,
-607,
-591,
-575,
-560,
-545,
-531,
-518,
-504,
-492,
-479,
-468,
-456,
-445,
-434,
-424,
-414,
-404,
-395,
-386,
-377,
-369,
-360,
-352,
-352,
-};
 
 int axp_usbvol(void)
 {
@@ -387,20 +218,6 @@ static void axp_charger_update_state(struct axp_charger *charger)
  	charger->charge_on = ((val[0] >> 7) & 0x01);
 }
 
-int reg_2_temp(uint16_t reg)
-{
-	int temp = 300;
-	int res,i;
-	res = reg * 10;
-	for(i = 0;i < 166; i++){
-		if(res >= tem_2_res_tabel[i]){
-			temp = 	(i - 40)*10 + (res-tem_2_res_tabel[i])*10 /(tem_2_res_tabel[i]-tem_2_res_tabel[i+1]);
-			break;
-		}
-	}
-	return	temp;
-}
-
 static void axp_charger_update(struct axp_charger *charger)
 {
   uint16_t tmp;
@@ -420,10 +237,10 @@ static void axp_charger_update(struct axp_charger *charger)
   charger->vusb = axp20_vdc_to_mV(tmp);
   tmp = charger->adc->iusb_res;
   charger->iusb = axp20_iusb_to_mA(tmp);
-  axp_reads(charger->master,0x62,2,val);
+  axp_reads(charger->master,AXP20_INTTEMP,2,val);
   //DBG_PSY_MSG("TEMPERATURE:val1=0x%x,val2=0x%x\n",val[1],val[0]);
   tmp = (val[0] << 4 ) + (val[1] & 0x0F);
-  charger->ic_temp = reg_2_temp(tmp);
+  charger->ic_temp = (int) tmp  - 1447;
   if(!charger->ext_valid){
   	charger->disvbat =  charger->vbat;
   	charger->disibat =  charger->ibat;
@@ -615,8 +432,8 @@ static int axp_battery_get_property(struct power_supply *psy,
     val->intval = charger->bat_det;
     break;
   case POWER_SUPPLY_PROP_TEMP:
-    val->intval = charger->ic_temp;
-    //val->intval =  300;
+    //val->intval = charger->ic_temp - 200;
+    val->intval =  300;
     break;
   default:
     ret = -EINVAL;
@@ -895,9 +712,6 @@ static int axp_battery_adc_set(struct axp_charger *charger)
 	ret = axp_update(charger->master, AXP20_ADC_CONTROL1, val , val);
   if (ret)
     return ret;
-  ret =	axp_update(charger->master,	AXP20_COULOMB_CONTROL, AXP20_COULOMB_ENABLE	, AXP20_COULOMB_ENABLE);
-	if (ret)
-		return ret;
     ret = axp_read(charger->master, AXP20_ADC_CONTROL3, &val);
   switch (charger->sample_time/25){
   case 1: val &= ~(3 << 6);break;
@@ -2100,7 +1914,6 @@ static int axp_battery_probe(struct platform_device *pdev)
   axp_clr_bits(charger->master,0x81,0x04);
 
 	axp_charger_update_state(charger);
-	axp_charger_update(charger);
 
   axp_read(charger->master,AXP20_DATA_BUFFER1,&val1);
   charger->rest_vol = (int) (val1 & 0x7F);
@@ -2109,15 +1922,15 @@ static int axp_battery_probe(struct platform_device *pdev)
 
   Cur_CoulombCounter = ABS(Get_Bat_Coulomb_Count(charger));
   printk("Cur_CoulombCounter = %d\n",Cur_CoulombCounter);
+  if((charger->rest_vol < 10) && (ABS(charger->rest_vol-(val2 & 0x7F)) <= 20) && (Cur_CoulombCounter <= 50)){
+  	charger->rest_vol = (int) (val1 & 0x7F);
+  }
   //if(ABS(charger->rest_vol-(val2 & 0x7F)) >= 3 && (val1 >> 7)){
-  if((!(val1 >> 7))|| ABS(charger->rest_vol-(val2 & 0x7F)) >= 10 || Cur_CoulombCounter > 20){
-    charger->rest_vol = (val2 & 0x7F)? (val2 & 0x7F): 1;
+  else if(ABS(charger->rest_vol-(val2 & 0x7F)) >= 10 || Cur_CoulombCounter > 50){
+    charger->rest_vol = (int) (val2 & 0x7F);
   }
   if((charger->bat_det == 0) || (charger->rest_vol == 127)){
   	charger->rest_vol = 100;
-  }
-  if(((charger->ibat) >= 4100) && !charger->is_on && charger->ext_valid && charger->charge_on){
-	charger->rest_vol = 100;
   }
 
   printk("last_rest_vol = %d, now_rest_vol = %d\n",(val1 & 0x7F),(val2 & 0x7F));
@@ -2132,9 +1945,6 @@ static int axp_battery_probe(struct platform_device *pdev)
   schedule_delayed_work(&charger->work, charger->interval);
   /* set usb cur-vol limit*/
   INIT_DELAYED_WORK(&usbwork, axp_usb);
-  if(charger->usb_valid){
-  	schedule_delayed_work(&usbwork, msecs_to_jiffies(7 * 1000));
-  }
 
   var = script_parser_fetch("pmu_para", "pmu_used2", &pmu_used2, sizeof(int));
   if (var)
