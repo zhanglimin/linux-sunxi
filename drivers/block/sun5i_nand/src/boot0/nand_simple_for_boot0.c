@@ -9,16 +9,16 @@
 * v0.2  2009-9-3 penggang modified for 1615
 *
 *********************************************************************************************************/
-#include "../include/nand_type.h"
-#include "../include/nand_physic.h"
-#include "../include/nand_simple.h"
-#include "../include/nfc.h"
-#include "../include/nand_drv_cfg.h"
 
+#include "../include/nand_drv_cfg.h"
+#include "../include/nand_type.h"
+#include "../include/nand_simple.h"
+#include "../include/nand_physic.h"
+#include "../include/nfc.h"
 
 struct __NandStorageInfo_t  NandStorageInfo;
 struct __NandPageCachePool_t PageCachePool;
-__u32 RetryCount[8];
+__u32 RetryCount[1];
 const __u16 random_seed[128] = {
     //0        1      2       3        4      5        6       7       8       9
 	0x2b75, 0x0bd0, 0x5ca3, 0x62d1, 0x1c93, 0x07e9, 0x2162, 0x3a72, 0x0d67, 0x67f9,
@@ -35,7 +35,6 @@ const __u16 random_seed[128] = {
     0x42e6, 0x262b, 0x2d2e, 0x1aea, 0x2e17, 0x173d, 0x3a6e, 0x71bf, 0x25f9, 0x0a5d,
     0x7c57, 0x0fbe, 0x46ce, 0x4939, 0x6b17, 0x37bb, 0x3e91, 0x76db
 };
-
 
 /**************************************************************************
 ************************* add one cmd to cmd list******************************
@@ -96,148 +95,14 @@ void _cal_addr_in_chip(__u32 block, __u32 page, __u32 sector,__u8 *addr, __u8 cy
 
 }
 
-
-
-
 __u8 _cal_real_chip(__u32 global_bank)
 {
-	__u8 chip = 0;
-
-	if((RB_CONNECT_MODE == 0)&&(global_bank<=2))
-	{
-	    if(global_bank)
-		chip = 7;
-	    else
-		chip = 0;
-
-	    return chip;
-	}
-	if((RB_CONNECT_MODE == 1)&&(global_bank<=1))
-      	{
-      	    chip = global_bank;
-	    return chip;
-      	}
-	if((RB_CONNECT_MODE == 2)&&(global_bank<=2))
-      	{
-      	    chip = global_bank;
-	    return chip;
-      	}
-	if((RB_CONNECT_MODE == 3)&&(global_bank<=2))
-      	{
-      	    chip = global_bank*2;
-	    return chip;
-      	}
-	if((RB_CONNECT_MODE == 4)&&(global_bank<=4))
-      	{
-      	    switch(global_bank){
-		  case 0:
-		  	chip = 0;
-			break;
-		  case 1:
-		  	chip = 2;
-			break;
-		  case 2:
-		  	chip = 1;
-			break;
-		  case 3:
-		  	chip = 3;
-			break;
-		  default :
-		  	chip =0;
-	    }
-
-	    return chip;
-      	}
-	if((RB_CONNECT_MODE == 5)&&(global_bank<=4))
-      	{
-      	    chip = global_bank*2;
-
-	    return chip;
-      	}
-	if((RB_CONNECT_MODE == 8)&&(global_bank<=8))
-      	{
-      	    switch(global_bank){
-		  case 0:
-		  	chip = 0;
-			break;
-		  case 1:
-		  	chip = 2;
-			break;
-		  case 2:
-		  	chip = 1;
-			break;
-		  case 3:
-		  	chip = 3;
-			break;
-		  case 4:
-		  	chip = 4;
-			break;
-		  case 5:
-		  	chip = 6;
-			break;
-		  case 6:
-		  	chip = 5;
-			break;
-		  case 7:
-		  	chip = 7;
-			break;
-		  default : chip =0;
-
-	    }
-
-	    return chip;
-      	}
-
-
-
-	PHY_ERR("wrong chip number ,rb_mode = %d, bank = %d, chip = %d, chip info = %x\n",RB_CONNECT_MODE, global_bank, chip, CHIP_CONNECT_INFO);
-
-	return 0xff;
+	return 0;
 }
 
 __u8 _cal_real_rb(__u32 chip)
 {
-	__u8 rb;
-
-
-	rb = 0;
-
-	if(RB_CONNECT_MODE == 0)
-      	{
-      	    rb = 0;
-      	}
-      if(RB_CONNECT_MODE == 1)
-      	{
-      	    rb = chip;
-      	}
-	if(RB_CONNECT_MODE == 2)
-      	{
-      	    rb = chip;
-      	}
-	if(RB_CONNECT_MODE == 3)
-      	{
-      	    rb = chip/2;
-      	}
-	if(RB_CONNECT_MODE == 4)
-      	{
-      	    rb = chip/2;
-      	}
-	if(RB_CONNECT_MODE == 5)
-      	{
-      	    rb = (chip/2)%2;
-      	}
-	if(RB_CONNECT_MODE == 8)
-      	{
-      	    rb = (chip/2)%2;
-      	}
-
-	if((rb!=0)&&(rb!=1))
-	{
-	    PHY_ERR("wrong Rb connect Mode, chip = %d ,RbConnectMode = %d \n",chip,RB_CONNECT_MODE);
-	    return 0xff;
-	}
-
-	return rb;
+	return 0;
 }
 
 /*******************************************************************
@@ -251,17 +116,8 @@ __s32 _read_status(__u32 cmd_value, __u32 nBank)
 	NFC_CMD_LIST cmd_list;
 
 	addr_cycle = 0;
-
-	if(!(cmd_value == 0x70 || cmd_value == 0x71))
-	{
-        	/* not 0x70 or 0x71, need send some address cycle */
-       	 if(cmd_value == 0x78)
-	 		addr_cycle = 3;
-       	 else
-       		addr_cycle = 1;
-      		 _cal_addr_in_chip(nBank*BLOCK_CNT_OF_DIE,0,0,addr,addr_cycle);
-	}
 	_add_cmd_list(&cmd_list, cmd_value, addr_cycle, addr, 1,NFC_IGNORE,1,NFC_IGNORE);
+
 	return (NFC_GetStatus(&cmd_list));
 
 }
@@ -272,67 +128,13 @@ __s32 _read_status(__u32 cmd_value, __u32 nBank)
 __s32 _wait_rb_ready(__u32 chip)
 {
 	__s32 timeout = 0xffff;
-	__u32 rb;
-
-
-      rb = _cal_real_rb(chip);
-
 
 	/*wait rb ready*/
-	while((timeout--) && (NFC_CheckRbReady(rb)));
+	while((timeout--) && (NFC_CheckRbReady(0)));
 	if (timeout < 0)
 		return -ERR_TIMEOUT;
 
 	return 0;
-}
-
-#ifdef __OS_SUPPORT_RB_INT__
-__s32 _wait_rb_ready_int(__u32 chip)
-{
-	__u32 rb;
-
-    rb = _cal_real_rb(chip);
-    NFC_SelectRb(rb);
-
-    if(NFC_CheckRbReady(rb))
-    {
-       NAND_WaitRbReady();
-    }
-    else
-    {
-        //printk("fast rb ready \n");
-    }
-
-    while(NFC_CheckRbReady(rb))
-    {
-        PRINT("rb int error!\n");
-    }
-
-
-	return 0;
-}
-#else
-__s32 _wait_rb_ready_int(__u32 chip)
-{
-	__s32 timeout = 0xffff;
-	__u32 rb;
-
-
-      rb = _cal_real_rb(chip);
-
-
-	/*wait rb ready*/
-	while((timeout--) && (NFC_CheckRbReady(rb)));
-	if (timeout < 0)
-		return -ERR_TIMEOUT;
-
-	return 0;
-}
-#endif
-
-void _pending_dma_irq_sem(void)
-{
-	return;
 }
 
 void _random_seed_init(void)
@@ -349,7 +151,7 @@ __u32 _cal_random_seed(__u32 page)
 	return randomseed;
 }
 
-__s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
+__s32 _read_single_page(struct boot_physical_param *readop,__u8 read_mode)
 {
 	__s32 ret;
 	__u32 k = 0;
@@ -361,20 +163,11 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 	NFC_CMD_LIST cmd_list[4];
 	__u32 list_len,i;
 
-	//sparebuf = (__u8 *)MALLOC(SECTOR_CNT_OF_SINGLE_PAGE * 4);
-	/*create cmd list*/
-	/*samll block*/
-	if (SECTOR_CNT_OF_SINGLE_PAGE == 1){
-		_cal_addr_in_chip(readop->block,readop->page,0,addr,4);
-		_add_cmd_list(cmd_list,0x00,4,addr,NFC_DATA_FETCH,NFC_IGNORE,NFC_IGNORE,NFC_WAIT_RB);
-	}
-	/*large block*/
-	else{
-		/*the cammand have no corresponding feature if IGNORE was set, */
-		_cal_addr_in_chip(readop->block,readop->page,0,addr,5);
-		_add_cmd_list(cmd_list,0x00,5,addr,NFC_NO_DATA_FETCH,NFC_IGNORE,NFC_IGNORE,NFC_NO_WAIT_RB);
 
-	}
+	/*the cammand have no corresponding feature if IGNORE was set, */
+	_cal_addr_in_chip(readop->block,readop->page,0,addr,5);
+	_add_cmd_list(cmd_list,0x00,5,addr,NFC_NO_DATA_FETCH,NFC_IGNORE,NFC_IGNORE,NFC_NO_WAIT_RB);
+
 	_add_cmd_list(cmd_list + 1,0x05,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE);
 	_add_cmd_list(cmd_list + 2,0xe0,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE);
 	_add_cmd_list(cmd_list + 3,0x30,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE,NFC_IGNORE);
@@ -392,7 +185,7 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 	NFC_SelectChip(readop->chip);
 	NFC_SelectRb(rb);
 
-    if(SUPPORT_READ_RETRY)
+    if(SUPPORT_READ_RETRY&&(read_mode == 0))
     {
         if((READ_RETRY_MODE>=0x10)&&(READ_RETRY_MODE<0x30))  //toshiba & Samsung mode
             RetryCount[readop->chip] = 0;
@@ -411,39 +204,18 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 			    }
 			}
 
-			if(SUPPORT_RANDOM)
-			{
-				random_seed = _cal_random_seed(readop->page);
-				NFC_SetRandomSeed(random_seed);
-				NFC_RandomEnable();
-				ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
-				NFC_RandomDisable();
-				if(ret == -ERR_ECC)
-					ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
-
-				/**************************************************************************************
-				* 1. add by Neil, from v2.09
-				* 2. if spare area is all 0xff in random disable mode, it means the page is a clear page
-				* 3. because in toshiba 24nm nand, too many clear pages are not all 0xff
-				***************************************************************************************/
-				if((ret == -ERR_ECC)&&(sparebuf[0]==0xff)&&(sparebuf[1]==0xff)&&(sparebuf[2]==0xff)&&(sparebuf[3]==0xff)&&(sparebuf[4]==0xff)&&(sparebuf[5]==0xff)&&(sparebuf[6]==0xff)&&(sparebuf[7]==0xff))
-				{
-					//PHY_DBG("[Read_single_page] find not all 0xff clear page!  chip = %d, block = %d, page = %d\n", readop->chip, readop->block, readop->page);
-					ret = 0;
-				}
-
-			}
-			else
-			{
-				ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
-			}
+			random_seed = _cal_random_seed(readop->page);
+			NFC_SetRandomSeed(random_seed);
+			NFC_RandomEnable();
+			ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, read_mode , NFC_PAGE_MODE);
+			NFC_RandomDisable();
 
 			if((ret != -ERR_ECC)||(k==READ_RETRY_CYCLE))
 			{
 			    if((READ_RETRY_MODE>=0x10)&&(READ_RETRY_MODE<0x20))  //toshiba mode
 			    {
-    			    //exit toshiba readretry
-    				PHY_ResetChip(readop->chip);
+			    //exit toshiba readretry
+				PHY_ResetChip(readop->chip);
 			    }
 			    else if((READ_RETRY_MODE>=0x20)&&(READ_RETRY_MODE<0x30))   //samsung mode
 			    {
@@ -456,40 +228,36 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 			RetryCount[readop->chip]++;
 		}
 
-    	if(k>0)
-    	{
-    		PHY_DBG("[Read_single_page] NFC_ReadRetry %d cycles, chip = %d, block = %d, page = %d, RetryCount = %d  \n", k ,readop->chip,readop->block, readop->page, RetryCount[readop->chip]);
-    		if(ret == -ERR_ECC)
-    		    PHY_DBG("ecc error!\n");
-    		//PHY_DBG("spare buf: %x, %x, %x, %x, %x, %x, %x, %x\n", sparebuf[0],sparebuf[1],sparebuf[2],sparebuf[3],sparebuf[4],sparebuf[5],sparebuf[6],sparebuf[7]);
-    	}
+	if(k>0)
+	{
+		PHY_DBG("[Read_single_page] NFC_ReadRetry %d cycles, chip = %d, block = %d, page = %d, RetryCount = %d  \n", k ,readop->chip,readop->block, readop->page, RetryCount[readop->chip]);
+		if(ret == -ERR_ECC)
+		    PHY_DBG("ecc error!\n");
+		//PHY_DBG("spare buf: %x, %x, %x, %x, %x, %x, %x, %x\n", sparebuf[0],sparebuf[1],sparebuf[2],sparebuf[3],sparebuf[4],sparebuf[5],sparebuf[6],sparebuf[7]);
+	}
 
-    	if(ret == ECC_LIMIT)
-    		ret = 0;
-
+	if(ret == ECC_LIMIT)
+		ret = 0;
 
     }
     else
     {
 		if(SUPPORT_RANDOM)
         {
-			random_seed = _cal_random_seed(readop->page);
+            if(read_mode == 1)
+                random_seed = 0x4a80;
+            else
+			    random_seed = _cal_random_seed(readop->page);
 			NFC_SetRandomSeed(random_seed);
 			NFC_RandomEnable();
-			ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
-			NFC_RandomDisable();
-			if(ret == -ERR_ECC)
-				ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
+			ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, read_mode , NFC_PAGE_MODE);
 		}
 		else
 		{
-			ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, dma_wait_mode , NFC_PAGE_MODE);
+			ret = NFC_Read(cmd_list, readop->mainbuf, sparebuf, read_mode , NFC_PAGE_MODE);
 		}
 
     }
-
-	if (dma_wait_mode)
-		_pending_dma_irq_sem();
 
 	if (readop->oobbuf){
 		MEMCPY(readop->oobbuf,sparebuf, 2 * 4);
@@ -498,7 +266,6 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 	NFC_DeSelectChip(readop->chip);
 	NFC_DeSelectRb(rb);
 
-	//FREE(sparebuf);
 	return ret;
 }
 
@@ -520,11 +287,10 @@ __s32 _read_single_page(struct boot_physical_param *readop,__u8 dma_wait_mode)
 __s32 PHY_Init(void)
 {
     __s32 ret;
-    __u32 i;
+
 	NFC_INIT_INFO nand_info;
     //init RetryCount
-    for(i=0; i<8; i++)
-        RetryCount[i] = 0;
+    RetryCount[0] = 0;
 	nand_info.bus_width = 0x0;
 	nand_info.ce_ctl = 0x0;
 	nand_info.ce_ctl1 = 0x0;
@@ -542,6 +308,18 @@ __s32 PHY_Init(void)
 	return ret;
 }
 
+#if 0
+__s32 PHY_GetDefaultParam(__u32 bank)
+{
+	__u8 default_value[64];
+
+    NFC_SelectChip(0);
+    NFC_GetDefaultParam(0, default_value, READ_RETRY_TYPE);
+	NFC_SetDefaultParam(0, default_value, READ_RETRY_TYPE);
+
+    return 0;
+}
+#else
 __s32 PHY_GetDefaultParam(__u32 bank)
 {
 	__u32 i, j, chip = 0, rb = 0;
@@ -551,159 +329,79 @@ __s32 PHY_GetDefaultParam(__u32 bank)
 	__s32 ret, otp_ok_flag = 0;
 	struct boot_physical_param nand_op;
 
-    chip = _cal_real_chip(bank);
-    NFC_SelectChip(chip);
-    rb = _cal_real_rb(chip);
-    NFC_SelectRb(rb);
     oob = (__u8 *)(oob_buf);
-
+    pdata = (__u8 *)(PHY_TMP_PAGE_CACHE);
     if (!PageCachePool.PageCache0){
 		PageCachePool.PageCache0 = (__u8 *)MALLOC(SECTOR_CNT_OF_SUPER_PAGE * 512);
 		if (!PageCachePool.PageCache0)
 			return -1;
 	}
-    pdata = (__u8 *)(PHY_TMP_PAGE_CACHE);
 
     if((READ_RETRY_MODE==2)||(READ_RETRY_MODE==3))
     {
-        while(1)
+        for(i = 8; i<12; i++)
         {
-            otp_ok_flag = 0;
-            for(i = 8; i<12; i++)
-            {
-                nand_op.chip = chip;
-                nand_op.block = i;
-                nand_op.page = 0;
-                nand_op.mainbuf = PHY_TMP_PAGE_CACHE;
-                nand_op.oobbuf = oob_buf;
+            nand_op.chip = chip;
+            nand_op.block = i;
+            nand_op.page = 0;
+            nand_op.mainbuf = PHY_TMP_PAGE_CACHE;
+            nand_op.oobbuf = oob_buf;
 
-                ret = PHY_SimpleRead_1K(&nand_op);
-                PHY_DBG("chip %d, block %d, page 0, oob: 0x%x, 0x%x, 0x%x, 0x%x\n", nand_op.chip, nand_op.block, oob[0], oob[1], oob[2], oob[3]);
-                if((ret>=0)&&(oob[0] == 0x00)&&(oob[1] == 0x4F)&&(oob[2] == 0x4F)&&(oob[3] == 0x42))
+            ret = PHY_SimpleRead_1K(&nand_op);
+
+            if((ret>=0)&&(oob[0] == 0x00)&&(oob[1] == 0x4F)&&(oob[2] == 0x4F)&&(oob[3] == 0x42))
+            {
+                otp_ok_flag = 1;
+                for(j=0;j<64;j++)
                 {
-                    otp_ok_flag = 1;
-                    for(j=0;j<64;j++)
+                    if((pdata[j] + pdata[64+j])!= 0xff)
                     {
-                        if((pdata[j] + pdata[64+j])!= 0xff)
-                        {
-                            PHY_DBG("otp data check error!\n");
-                            otp_ok_flag = 0;
-                            break;
-                        }
-                    }
-                    if(otp_ok_flag == 1)
-                    {
-                        PHY_DBG("find good otp value in chip %d, block %d \n", nand_op.chip, nand_op.block);
+                        PHY_DBG("otp data check error!\n");
+                        otp_ok_flag = 0;
                         break;
                     }
-
                 }
-            }
-
-            if(otp_ok_flag)
-            {
-                for(j=0;j<64;j++)
-                    default_value[j] = pdata[j];
-                if((READ_RETRY_MODE==2)||(READ_RETRY_MODE==3))
+                if(otp_ok_flag == 1)
                 {
-                    PHY_DBG("Read Retry value Table from nand otp block:\n");
-                    for(j = 0;j<64; j++)
-                    {
-                        PHY_DBG("0x%x ", pdata[j]);
-                        if(j%8 == 7)
-                            PHY_DBG("\n");
-                    }
+                    PHY_DBG("find good otp value in chip %d, block %d \n", nand_op.chip, nand_op.block);
+                    break;
                 }
-                NFC_GetOTPValue(chip, default_value, READ_RETRY_TYPE);
-                break;
-            }
-            else
-            {
-                PHY_DBG("[PHY_DBG] can't get right otp value from nand otp blocks, then use otp command\n");
-                NFC_GetDefaultParam(chip, default_value, READ_RETRY_TYPE);
-	        NFC_SetDefaultParam(chip, default_value, READ_RETRY_TYPE);
-	        #if 0
-	        if((READ_RETRY_MODE==2)||(READ_RETRY_MODE==3))
-                {
-                    PHY_DBG("Read Retry value Table from otp area:\n");
-                    for(i = 0;i<8; i++)
-                    {
-                        PHY_DBG("retry cycle %d: ", i);
-                        for(j=0; j<8;j++)
-                            PHY_DBG("0x%x ", default_value[8*i+j]);
-                        PHY_DBG("\n");
-                    }
-                }
-                #endif
-
-                for(j=0;j<64;j++)
-                {
-                    pdata[j] = default_value[j];
-                    pdata[64 + j] = 0xff - default_value[j];
-                }
-
-                oob[0] = 0x00;
-                oob[1] = 0x4F;
-                oob[2] = 0x4F;
-                oob[3] = 0x42;
-
-                NFC_LSBInit(READ_RETRY_TYPE);
-                NFC_LSBEnable(chip, READ_RETRY_TYPE);
-                for(i = 8; i<12; i++)
-                {
-                    nand_op.chip = chip;
-                    nand_op.block = i;
-                    nand_op.page = 0;
-                    nand_op.mainbuf = PHY_TMP_PAGE_CACHE;
-                    nand_op.oobbuf = oob_buf;
-
-                    ret = PHY_SimpleErase(&nand_op);
-                    if(ret<0)
-                    {
-                        PHY_ERR("erase chip %d, block %d error\n", nand_op.chip, nand_op.block);
-                        continue;
-                    }
-                    ret = PHY_SimpleWrite_1K(&nand_op);
-                    if(ret<0)
-                    {
-                        PHY_ERR("write chip %d, block %d, page 0 error\n", nand_op.chip, nand_op.block);
-                        continue;
-                    }
-                }
-                NFC_LSBDisable(chip, READ_RETRY_TYPE);
-                NFC_LSBExit(READ_RETRY_TYPE);
-
-                PHY_DBG("[PHY_DBG] repair otp value end\n");
             }
         }
 
+        if(otp_ok_flag)
+        {
+            pdata = (__u8 *)(PHY_TMP_PAGE_CACHE);
+            for(j=0;j<64;j++)
+                default_value[j] = pdata[j];
+            NFC_GetOTPValue(0, default_value, READ_RETRY_TYPE);
+        }
+        else
+        {
+            NFC_GetDefaultParam(chip, default_value, READ_RETRY_TYPE);
+	        NFC_SetDefaultParam(chip, default_value, READ_RETRY_TYPE);
+        }
 
     }
     else
     {
-        NFC_GetDefaultParam(chip, default_value, READ_RETRY_TYPE);
-	    NFC_SetDefaultParam(chip, default_value, READ_RETRY_TYPE);
-	    if((READ_RETRY_MODE==0)||(READ_RETRY_MODE==1))  //hynix mode
-        {
-            PHY_DBG("PHY_SetDefaultParam: chip 0x%x, Read Retry Default Value is 0x%x, 0x%x, 0x%x, 0x%x\n", \
-            chip, default_value[0], default_value[1], default_value[2],default_value[3]);
-        }
-
+         NFC_GetDefaultParam(chip, default_value, READ_RETRY_TYPE);
+	     NFC_SetDefaultParam(chip, default_value, READ_RETRY_TYPE);
     }
 
     return 0;
 }
+#endif
+
 
 __s32 PHY_SetDefaultParam(__u32 bank)
 {
-	__u32 chip = 0;
 	__u8 default_value[64];
 
 	if(SUPPORT_READ_RETRY)
 	{
-        chip = _cal_real_chip(bank);
-        NFC_SelectChip(chip);
-        NFC_SetDefaultParam(chip, default_value, READ_RETRY_TYPE);
+        NFC_SelectChip(0);
+        NFC_SetDefaultParam(0, default_value, READ_RETRY_TYPE);
     }
     return 0;
 }
@@ -713,9 +411,7 @@ __s32 PHY_ChangeMode(__u8 serial_mode)
 
 	NFC_INIT_INFO nand_info;
 
-	NAND_SetClk(NandStorageInfo.FrequencePar);
-
-	/*memory allocate*/
+   /*memory allocate*/
 	if (!PageCachePool.PageCache0){
 		PageCachePool.PageCache0 = (__u8 *)MALLOC(SECTOR_CNT_OF_SUPER_PAGE * 512);
 		if (!PageCachePool.PageCache0)
@@ -762,30 +458,12 @@ __s32 PHY_ChangeMode(__u8 serial_mode)
 */
 __s32 PHY_Exit(void)
 {
-    __u32 i = 0;
-
-	if (PageCachePool.PageCache0){
-		FREE(PageCachePool.PageCache0,SECTOR_CNT_OF_SUPER_PAGE * 512);
-		PageCachePool.PageCache0 = NULL;
-	}
-	if (PageCachePool.SpareCache){
-		FREE(PageCachePool.SpareCache,SECTOR_CNT_OF_SUPER_PAGE * 4);
-		PageCachePool.SpareCache = NULL;
-	}
-	if (PageCachePool.TmpPageCache){
-		FREE(PageCachePool.TmpPageCache,SECTOR_CNT_OF_SUPER_PAGE * 512);
-		PageCachePool.TmpPageCache = NULL;
-	}
 
 	if(SUPPORT_READ_RETRY)
 	{
-	    for(i=0; i<NandStorageInfo.ChipCnt;i++)
-        {
-            PHY_SetDefaultParam(i);
-        }
+        PHY_SetDefaultParam(0);
         NFC_ReadRetryExit(READ_RETRY_TYPE);
 	}
-
 
 	NFC_RandomDisable();
 
@@ -820,7 +498,7 @@ __s32  PHY_ResetChip(__u32 nChip)
 	_add_cmd_list(&cmd, 0xff, 0 , NFC_IGNORE, NFC_NO_DATA_FETCH, NFC_IGNORE, NFC_IGNORE, NFC_NO_WAIT_RB);
 	ret = NFC_ResetChip(&cmd);
 
-      	/*wait rb0 ready*/
+	/*wait rb0 ready*/
 	NFC_SelectRb(0);
 	while((timeout--) && (NFC_CheckRbReady(0)));
 	if (timeout < 0)
@@ -858,15 +536,12 @@ __s32  PHY_ResetChip(__u32 nChip)
 __s32  PHY_ReadNandId(__s32 nChip, void *pChipID)
 {
 	__s32 ret;
-
-
 	NFC_CMD_LIST cmd;
 	__u8 addr = 0;
 
 	NFC_SelectChip(nChip);
 
-	//_add_cmd_list(&cmd, 0x90,1 , &addr, NFC_DATA_FETCH, NFC_IGNORE, 5, NFC_NO_WAIT_RB);
-	// toshiba 24nm flash has 6 bytes id
+
 	_add_cmd_list(&cmd, 0x90,1 , &addr, NFC_DATA_FETCH, NFC_IGNORE, 6, NFC_NO_WAIT_RB);
 	ret = NFC_GetId(&cmd, pChipID);
 
@@ -876,59 +551,15 @@ __s32  PHY_ReadNandId(__s32 nChip, void *pChipID)
 	return ret;
 }
 
-/*
-************************************************************************************************************************
-*                       CHECK WRITE PROTECT STATUS
-*
-*Description: check the status of write protect.
-*
-*Arguments  : nChip     the number of chip, which nand chip need be checked.
-*
-*Return     : the result of status check;
-*             = 0       the nand flash is not write proteced;
-*             = 1       the nand flash is write proteced;
-*             = -1      check status failed.
-************************************************************************************************************************
-*/
-__s32  PHY_CheckWp(__u32 nChip)
-{
-	__s32 status;
-	__u32 rb;
-
-
-	rb = _cal_real_rb(nChip);
-	NFC_SelectChip(nChip);
-	NFC_SelectRb(rb);
-
-
-	status = _read_status(0x70,nChip);
-	NFC_DeSelectChip(nChip);
-	NFC_DeSelectRb(rb);
-
-	if (status < 0)
-		return status;
-
-	if (status & NAND_WRITE_PROTECT){
-		return 1;
-	}
-	else
-		return 0;
-}
-
-void _pending_rb_irq_sem(void)
-{
-	return;
-}
-
-void _do_irq(void)
-{
-
-}
-
 
 __s32 PHY_SimpleRead (struct boot_physical_param *readop)
 {
 	return (_read_single_page(readop,0));
+}
+
+__s32 PHY_SimpleRead_1K (struct boot_physical_param *readop)
+{
+	return (_read_single_page(readop,1));
 }
 
 
@@ -984,11 +615,7 @@ __s32 PHY_SynchBank(__u32 nBank, __u32 bMode)
 			cmd_value = 0x70;
 	}
 
-	/*if support rb irq , last op is erase or write*/
-	if (SUPPORT_RB_IRQ)
-		_pending_rb_irq_sem();
 
-	_wait_rb_ready_int(chip);
 
 	NFC_SelectChip(chip);
 	NFC_SelectRb(rb);
