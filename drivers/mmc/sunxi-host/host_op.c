@@ -483,6 +483,7 @@ static void sunximmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
     switch (ios->power_mode)
     {
         case MMC_POWER_ON:
+#if 0
         case MMC_POWER_UP:
             if (!smc_host->power_on)
             {
@@ -501,6 +502,28 @@ static void sunximmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
                 smc_host->power_on = 1;
             }
         	break;
+#endif
+case MMC_POWER_UP:
+            if (!smc_host->power_on)
+            {
+                SMC_MSG("mmc %d power on !!\n", smc_host->pdev->id);
+                /* resume pins to correct status */
+                sunximmc_resume_pins(smc_host);
+             /* enable mmc hclk */
+             clk_enable(smc_host->hclk);
+             /* enable mmc mclk */
+             clk_enable(smc_host->mclk);
+                /* restore registers */
+                mdelay(500);
+                sdxc_regs_restore(smc_host);
+                mdelay(500);
+                sdxc_program_clk(smc_host);
+                mdelay(500);
+                /* enable irq */
+                enable_irq(smc_host->irq);
+                smc_host->power_on = 1;
+            }
+         break;
         case MMC_POWER_OFF:
             if (smc_host->power_on)
             {
