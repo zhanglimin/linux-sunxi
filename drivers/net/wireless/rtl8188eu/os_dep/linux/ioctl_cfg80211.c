@@ -2751,6 +2751,7 @@ void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint f
 	int channel;
 	struct wireless_dev *pwdev = padapter->rtw_wdev;
 	struct mlme_ext_priv *pmlmeext = &(padapter->mlmeextpriv);
+	struct cfg80211_bss *bss = NULL;
 
 	printk("%s(padapter=%p)\n", __func__, padapter);
 
@@ -2768,14 +2769,14 @@ void rtw_cfg80211_indicate_sta_assoc(_adapter *padapter, u8 *pmgmt_frame, uint f
 #ifdef COMPAT_KERNEL_RELEASE
        cfg80211_rx_mgmt(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)) && !defined(CONFIG_CFG80211_FORCE_COMPATIBLE_2_6_37_UNDER)
-	cfg80211_rx_mgmt(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
+	cfg80211_rx_mgmt(padapter->pnetdev, freq, 0, pmgmt_frame, frame_len, GFP_ATOMIC);
 #else //COMPAT_KERNEL_RELEASE
 	//to avoid WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION)  when calling cfg80211_send_rx_assoc()
 #ifndef CONFIG_PLATFORM_MSTAR_TITANIA12
 	pwdev->iftype = NL80211_IFTYPE_STATION;
 #endif //CONFIG_PLATFORM_MSTAR_TITANIA12
 	printk("iftype=%d before call cfg80211_send_rx_assoc()\n", pwdev->iftype);
-	cfg80211_send_rx_assoc(padapter->pnetdev, pmgmt_frame, frame_len);
+	cfg80211_send_rx_assoc(padapter->pnetdev, bss, pmgmt_frame, frame_len);
 	printk("iftype=%d after call cfg80211_send_rx_assoc()\n", pwdev->iftype);
 	pwdev->iftype = NL80211_IFTYPE_AP;
 	//cfg80211_rx_action(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
@@ -3013,7 +3014,7 @@ static const struct net_device_ops rtw_cfg80211_monitor_if_ops = {
 	.ndo_open = rtw_cfg80211_monitor_if_open,
        .ndo_stop = rtw_cfg80211_monitor_if_close,
        .ndo_start_xmit = rtw_cfg80211_monitor_if_xmit_entry,
-       .ndo_set_multicast_list = rtw_cfg80211_monitor_if_set_multicast_list,
+	.ndo_set_rx_mode = rtw_cfg80211_monitor_if_set_multicast_list,
        .ndo_set_mac_address = rtw_cfg80211_monitor_if_set_mac_address,
 };
 #endif
@@ -3165,7 +3166,7 @@ static int	cfg80211_rtw_del_virtual_intf(struct wiphy *wiphy, struct net_device 
 }
 
 static int	cfg80211_rtw_add_beacon(struct wiphy *wiphy, struct net_device *dev,
-			      struct beacon_parameters *info)
+			      struct cfg80211_beacon_data *info)
 {
 	int ret=0;
 	u8 *pbuf = NULL;
@@ -3264,7 +3265,7 @@ static int	cfg80211_rtw_add_beacon(struct wiphy *wiphy, struct net_device *dev,
 }
 
 static int	cfg80211_rtw_set_beacon(struct wiphy *wiphy, struct net_device *dev,
-			      struct beacon_parameters *info)
+			      struct cfg80211_beacon_data *info)
 {
 	_adapter *padapter = wiphy_to_adapter(wiphy);
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
@@ -3498,12 +3499,7 @@ void rtw_cfg80211_rx_action_p2p(_adapter *padapter, u8 *pmgmt_frame, uint frame_
 		freq = rtw_ieee80211_channel_to_frequency(channel, IEEE80211_BAND_5GHZ);
 	}
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)) || defined(COMPAT_KERNEL_RELEASE)
-	cfg80211_rx_mgmt(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
-#else
-	cfg80211_rx_action(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
-#endif
-
+	cfg80211_rx_mgmt(padapter->pnetdev, freq, 0, pmgmt_frame, frame_len, GFP_ATOMIC);
 }
 
 void rtw_cfg80211_rx_p2p_action_public(_adapter *padapter, u8 *pmgmt_frame, uint frame_len)
@@ -3532,7 +3528,7 @@ void rtw_cfg80211_rx_p2p_action_public(_adapter *padapter, u8 *pmgmt_frame, uint
 	}
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)) || defined(COMPAT_KERNEL_RELEASE)
-	cfg80211_rx_mgmt(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
+	cfg80211_rx_mgmt(padapter->pnetdev, freq, 0, pmgmt_frame, frame_len, GFP_ATOMIC);
 #else
 	cfg80211_rx_action(padapter->pnetdev, freq, pmgmt_frame, frame_len, GFP_ATOMIC);
 #endif
@@ -4351,9 +4347,9 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 #ifdef CONFIG_AP_MODE
 	.add_virtual_intf = cfg80211_rtw_add_virtual_intf,
 	.del_virtual_intf = cfg80211_rtw_del_virtual_intf,
-	.add_beacon = cfg80211_rtw_add_beacon,
-	.set_beacon = cfg80211_rtw_set_beacon,
-	.del_beacon = cfg80211_rtw_del_beacon,
+	.start_ap = cfg80211_rtw_add_beacon,
+	.change_beacon = cfg80211_rtw_set_beacon,
+	.stop_ap = cfg80211_rtw_del_beacon,
 	.add_station = cfg80211_rtw_add_station,
 	.del_station = cfg80211_rtw_del_station,
 	.change_station = cfg80211_rtw_change_station,
