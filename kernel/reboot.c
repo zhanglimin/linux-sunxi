@@ -6,7 +6,6 @@
 
 #define pr_fmt(fmt)	"reboot: " fmt
 
-#include <linux/ctype.h>
 #include <linux/export.h>
 #include <linux/kexec.h>
 #include <linux/kmod.h>
